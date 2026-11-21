@@ -66,6 +66,13 @@ export function hitTest(level, foundIds, x, y) {
   return best;
 }
 
+// The already-found difference at a point, or null. A click on a found
+// difference is ignored by the game, never punished as a miss.
+export function hitFound(level, foundIds, x, y) {
+  const d = hitTest(level, [], x, y);
+  return d && foundIds.includes(d.id) ? d : null;
+}
+
 // A random still-unfound difference for the hint to point at, or null.
 export function hintTarget(level, foundIds) {
   const rest = level.diffs.filter((d) => !foundIds.includes(d.id));

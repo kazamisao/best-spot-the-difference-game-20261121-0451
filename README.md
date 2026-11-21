@@ -11,8 +11,7 @@ two pictures of each room before the clock runs out.
 - **Wrong clicks cost 5 seconds** and break your combo.
 - **Quick finds in a row build a combo** — each step pays +50 points.
 - **H** spends one of your three hints: a golden ring pulses around the
-  area of a difference still hiding (never the exact spot), for 5 seconds
-  of clock.
+  area of a hidden difference, for 5 seconds of clock.
 - **P** pauses, **M** toggles sound, **Enter** starts and moves on.
 
 Three rooms, seven differences each, and the clock gets shorter every room:

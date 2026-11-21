@@ -3,7 +3,7 @@
 // drive. Level state itself lives in logic.js; this file only moves
 // between screens and keeps the running totals.
 import { CONFIG } from './config.js';
-import { LEVELS, hitTest, hintTarget } from './differences.js';
+import { LEVELS, hitTest, hitFound, hintTarget } from './differences.js';
 import { createLevelState, registerFind, registerMiss, useHint, tick } from './logic.js';
 import { render } from './render.js';
 import { attachInput } from './input.js';
@@ -74,6 +74,10 @@ game.onPanelClick = (panel, x, y) => {
       audio.playFind(st.combo);
       setStatus(`Found: ${diff.name}. ${st.found.length} of 7.`);
       if (st.complete) finishLevel();
+    } else if (hitFound(game.level, st.found, x, y)) {
+      // Already found: ignore the click entirely — no miss, no time lost,
+      // combo untouched, no marker. Coordinates are panel-local, so this
+      // covers the same spot on either panel.
     } else {
       registerMiss(st);
       game.flashes.push({ panel, x, y, born: game.nowMs });

@@ -3,7 +3,7 @@
 // Run: node --test test/test_entry.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LEVELS, PANEL, hitTest, hintTarget } from '../game/src/differences.js';
+import { LEVELS, PANEL, hitTest, hitFound, hintTarget } from '../game/src/differences.js';
 import { createLevelState, registerFind, registerMiss, useHint, tick } from '../game/src/logic.js';
 import { CONFIG } from '../game/src/config.js';
 
@@ -90,4 +90,50 @@ test('finding all seven completes the level', () => {
   for (const d of LEVELS[0].diffs) registerFind(state, d, 1000);
   assert.equal(state.complete, true);
   assert.equal(state.found.length, 7);
+});
+
+// Click resolution, exactly as the browser handler decides it: a hit on an
+// unfound difference finds it, a hit on an already-found difference is
+// ignored, anything else is a miss. Coordinates are panel-local, so the
+// same (x, y) on either panel resolves the same way.
+function resolveClick(state, level, panel, x, y, nowMs) {
+  const diff = hitTest(level, state.found, x, y);
+  if (diff) {
+    registerFind(state, diff, nowMs);
+    return 'find';
+  }
+  if (hitFound(level, state.found, x, y)) return 'already-found';
+  registerMiss(state);
+  return 'miss';
+}
+
+test('clicking an already-found difference is ignored, never a miss', () => {
+  const state = createLevelState(LEVELS[0], CONFIG.levels[0].seconds);
+  const first = LEVELS[0].diffs[0];
+  assert.equal(resolveClick(state, LEVELS[0], 'left', first.x, first.y, 1000), 'find');
+  assert.equal(state.found.length, 1);
+  assert.equal(state.misses, 0);
+  assert.equal(state.combo, 1);
+  const secondsAfterFind = state.secondsLeft;
+
+  // The exact same spot again: ignored, no penalty at all.
+  assert.equal(resolveClick(state, LEVELS[0], 'left', first.x, first.y, 2000), 'already-found');
+  assert.equal(state.found.length, 1);
+  assert.equal(state.misses, 0);
+  assert.equal(state.secondsLeft, secondsAfterFind);
+  assert.equal(state.combo, 1);
+});
+
+test('clicking an already-found difference on the other panel is ignored too', () => {
+  const state = createLevelState(LEVELS[0], CONFIG.levels[0].seconds);
+  const first = LEVELS[0].diffs[0];
+  assert.equal(resolveClick(state, LEVELS[0], 'left', first.x, first.y, 1000), 'find');
+  const secondsAfterFind = state.secondsLeft;
+
+  // Same spot, other panel: the same difference, already found.
+  assert.equal(resolveClick(state, LEVELS[0], 'right', first.x, first.y, 2000), 'already-found');
+  assert.equal(state.found.length, 1);
+  assert.equal(state.misses, 0);
+  assert.equal(state.secondsLeft, secondsAfterFind);
+  assert.equal(state.combo, 1);
 });
